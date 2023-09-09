@@ -11,8 +11,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL = int(os.getenv('CHANNEL'))
 TIMEOUT = eval(os.getenv('TIMEOUT'))
 
-description = '''igorTheLoggerBot'''
-#bot = commands.Bot(command_prefix='!', description=description)
+description = '''Greeter'''
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!',
