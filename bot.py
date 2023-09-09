@@ -11,7 +11,8 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL = int(os.getenv('CHANNEL'))
 TIMEOUT = eval(os.getenv('TIMEOUT'))
 
-description = '''Greeter'''
+description = '''igorTheLoggerBot'''
+#bot = commands.Bot(command_prefix='!', description=description)
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!',
@@ -27,21 +28,19 @@ async def on_member_join(member):
     channel = await bot.fetch_channel(CHANNEL)
     embed=discord.Embed(title="Päivöö!",description=f"{member.mention} hyppäsi servulle")
     await channel.send(embed=embed)
-
     await channel.send(f'{member.mention}, ohai! Mistäs tulet ja miten päädyit tänne? Bottina potkin sellaiset pois jotka ei vastaile. Aikaa 2 tuntia ^^')
 
     def check(m):
-         return bot.user.mention in m.content and m.channel == channel
-
+        return  bot.user.mention in m.content and m.channel == channel and member == m.author
+        
     try:
-        msg = await bot.wait_for('message', timeout=TIMEOUT, check=check)
+        msg = await bot.wait_for('message', check=check, timeout=TIMEOUT)
     except asyncio.TimeoutError:
         await channel.send('👎')
         await member.kick(reason="Ei vastausta botille. :(")
         await channel.send(f'{member} potkittiin, koska ei vastaillut botille.')
     else:
         await channel.send('👍')
-
 
 @bot.event
 async def on_ready():
@@ -50,6 +49,6 @@ async def on_ready():
     
     print(TIMEOUT)
     channel = bot.get_channel(CHANNEL)
-    await channel.send("Elossa! ^_^")
+    #await channel.send("Elossa! ^_^")
 
 bot.run(TOKEN)
