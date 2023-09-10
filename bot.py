@@ -5,6 +5,7 @@ import discord
 from discord.ext import commands
 from discord.utils import get
 from dotenv import load_dotenv
+import re
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -54,11 +55,28 @@ async def on_member_join(member):
 
 @bot.event
 async def on_message(message):
-    formats = ['jpg', 'png', 'gif', 'svg']
-    attachments = [f for f in message.attachments if f.filename.split('.')[-1] in formats]
-    #print(message.channel.id)
-    if message.channel.id == MEDIA_CHANNEL and not attachments:
-       await message.delete()
+    formats = ['jpg', 'png', 'gif', 'svg', 'mp4', 'm4v', 'mov', 'webm', 'mp3', 'ogg', 'wav', '3gp', 'flac', 'jpeg']
+    attachments = [f for f in message.attachments if f.filename.split('.')[-1].lower() in formats]
+    
+    url_pattern = r'https?://\S+'
+    urls = re.findall(url_pattern, message.content)
+    urls_has_extension = 0
+
+    if message.channel.id == MEDIA_CHANNEL:
+        for url in urls:
+            if urls:
+                url_parts = url.split('.')
+                if len(url_parts) > 1:
+                    file_extension = url_parts[-1].lower()
+                    
+                    if file_extension in formats:
+                        urls_has_extension = 1
+        
+    
+        if urls and urls_has_extension > 0:
+            return
+        elif not attachments:
+            await message.delete()
 
 @bot.event
 async def on_ready():
