@@ -1,13 +1,13 @@
-from discord.ext import commands
-from dotenv import load_dotenv
-from urllib.parse import urlparse
 import asyncio
-import discord
-import json
-import logging
 import mimetypes
 import os
+from urllib.parse import urlparse
+import discord
+from discord.ext import commands
+from dotenv import load_dotenv
 import re
+import json
+import logging
 import yaml
 
 # Configure logging
