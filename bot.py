@@ -36,6 +36,13 @@ ALLOWED_MIMETYPES_RULES = []
 with open('messages.json') as f:
     messages = json.load(f)
 
+LANGUAGE = 'fi'  # Change this based on user preferences or server settings
+
+# Initialize the bot with a command prefix and description
+description = '''igorTheLoggerBot'''
+intents = discord.Intents().all()
+bot = commands.Bot(command_prefix='!', case_insensitive=True, help_command=None, intents=intents)
+
 def reload_rules_if_changed(file):
     global rules_stamp
     global rules
@@ -78,14 +85,6 @@ def is_mimetype_allowed(url):
         else:
             logging.warning(f"Mimetype not found for: {url}")
             return False
-
-
-LANGUAGE = 'fi'  # Change this based on user preferences or server settings
-
-# Initialize the bot with a command prefix and description
-description = '''igorTheLoggerBot'''
-intents = discord.Intents().all()
-bot = commands.Bot(command_prefix='!', case_insensitive=True, help_command=None, intents=intents)
 
 rules_stamp = ''
 rules = reload_rules_if_changed(RULES_FILE)
