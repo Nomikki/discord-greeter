@@ -8,6 +8,7 @@ import logging
 import mimetypes
 import os
 import re
+import yaml
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -26,7 +27,7 @@ else:
 
 GREETING_TIMEOUT_HOURS = int(os.getenv('GREETING_TIMEOUT_HOURS')) or 2
 GREETING_TIMEOUT = GREETING_TIMEOUT_HOURS * 60 * 60
-RULES_FILE = 'rules.json'
+RULES_FILE = 'rules.yaml'
 
 ALLOWED_URLS_RULES = []
 ALLOWED_MIMETYPES_RULES = []
@@ -44,22 +45,34 @@ def reload_rules_if_changed(file):
     current_stamp = os.stat(file).st_mtime
     
     if rules_stamp != current_stamp:
-        with open('messages.json') as f:
-            rules = json.load(f)
+        with open(RULES_FILE, "r") as f:
+            try:
+                rules = yaml.safe_load(f)
+                print("Reloaded rules")
+            except yaml.YAMLError as exc:
+                print(exc)
+
         rules_stamp = current_stamp
-        ALLOWED_URLS_RULES = '|'.join(rules.allowed_urls)
-        ALLOWED_MIMETYPES_RULES = '|'.join(rules.allowed_mimetypes)
+        ALLOWED_URLS_RULES = '|'.join(rules['allowed_urls'])
+        ALLOWED_MIMETYPES_RULES = '|'.join(rules['allowed_mimetypes'])
+        print(ALLOWED_URLS_RULES)
+        print(ALLOWED_MIMETYPES_RULES)
 
 def is_mimetype_allowed(url):
     u = urlparse(url)
-    if re.match(rf'({ALLOWED_URLS_RULES})', url):
+    reload_rules_if_changed(RULES_FILE)
+    allowed_url_regex = fr'({ALLOWED_URLS_RULES})'
+    allowed_mimetype_regex = fr'({ALLOWED_MIMETYPES_RULES})'
+    allowed_url = re.findall(allowed_url_regex, url)
+    # print(f"allowed_url: {allowed_url}, url: {url}, regex: {allowed_url_regex}")
+    if allowed_url and allowed_url[0]:
         print(f"URL is allowed, for: {url}")
         return True
     else:
         mimetype, _ = mimetypes.guess_type(u.path)
         if mimetype:
-            allowed = re.match(rf'({ALLOWED_MIMETYPES_RULES})', mimetype)
-            if allowed and allowed.group('type'):
+            allowed = re.match(allowed_mimetype_regex, mimetype)
+            if allowed:
                 print(f"Mimetype is allowed ('{mimetype}'), for: {url}")
                 return True
             else:
@@ -111,7 +124,7 @@ async def on_message(message):
     try:
         if message.channel.id == MEDIA_CHANNEL:
             attachments = [f for f in message.attachments if is_mimetype_allowed(f.url)]
-            url_pattern = r'https?://\S+\.\w+'
+            url_pattern = r'https?://\S+'
             urls = [url for url in re.findall(url_pattern, message.content) if is_mimetype_allowed(url)]
             if not (attachments or urls):
                 await message.delete()

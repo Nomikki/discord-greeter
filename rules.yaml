@@ -1,0 +1,11 @@
+allowed_urls:
+    - youtu.be\/[\w-]+
+    - youtube.com\/watch\?v=[\w-]+
+    - imgur.com\/gallery\/[\w-]+
+    - open.spotify.com\/(album|track)\/[\w-]+
+    - vimeo.com\/[\w-]+
+    - soundcloud.com\/[\w-]+
+allowed_mimetypes:
+    - audio\/.*
+    - image\/.*
+    - video\/.*
