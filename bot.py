@@ -48,9 +48,9 @@ def reload_rules_if_changed(file):
         with open(RULES_FILE, "r") as f:
             try:
                 rules = yaml.safe_load(f)
-                print("Reloaded rules")
+                logging.info("Reloaded rules")
             except yaml.YAMLError as exc:
-                print(exc)
+                logging.exception(exc)
 
         rules_stamp = current_stamp
         ALLOWED_URLS_RULES = '|'.join(rules['allowed_urls'])
@@ -63,20 +63,20 @@ def is_mimetype_allowed(url):
     allowed_mimetype_regex = fr'({ALLOWED_MIMETYPES_RULES})'
     allowed_url = re.findall(allowed_url_regex, url)
     if allowed_url and allowed_url[0]:
-        print(f"URL is allowed, for: {url}")
+        logging.info(f"URL is allowed, for: {url}")
         return True
     else:
         mimetype, _ = mimetypes.guess_type(u.path)
         if mimetype:
             allowed = re.match(allowed_mimetype_regex, mimetype)
             if allowed:
-                print(f"Mimetype is allowed ('{mimetype}'), for: {url}")
+                logging.info(f"Mimetype is allowed ('{mimetype}'), for: {url}")
                 return True
             else:
-                print(f"Mimetype is not allowed ('{mimetype}'), in: {url}")
+                logging.warning(f"Mimetype is not allowed ('{mimetype}'), in: {url}")
                 return False
         else:
-            print(f"Mimetype not found for: {url}")
+            logging.warning(f"Mimetype not found for: {url}")
             return False
 
 
@@ -133,8 +133,8 @@ async def on_ready():
     "This event is triggered when the bot successfully connects to the server."
     try:
         logging.info(f'Logged in as {bot.user.name} / {bot.user.id}')
-        print(GREETING_CHANNEL)
-        print(MEDIA_CHANNEL)
+        logging.info(f'GREETING_CHANNEL: {GREETING_CHANNEL}')
+        logging.info(f'MEDIA_CHANNEL: {MEDIA_CHANNEL}')
     except Exception as e:
         logging.exception(f"Error in on_ready, {e}")
 
