@@ -8,11 +8,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-CHANNEL = int(os.getenv('CHANNEL'))
+GREETING_CHANNEL = int(os.getenv('GREETING_CHANNEL'))
+MEDIA_CHANNEL = int(os.getenv('MEDIA_CHANNEL'))
+
 TIMEOUT = eval(os.getenv('TIMEOUT'))
 
 description = '''igorTheLoggerBot'''
-#bot = commands.Bot(command_prefix='!', description=description)
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!',
@@ -25,10 +26,19 @@ bot = commands.Bot(command_prefix='!',
 async def on_member_join(member):
     print("somebody joined")
 
-    channel = await bot.fetch_channel(CHANNEL)
+    print(">>>>")
+    print(member)
+    print(">>>>")
+
+    channel = await bot.fetch_channel(GREETING_CHANNEL)
     embed=discord.Embed(title="Päivöö!",description=f"{member.mention} hyppäsi servulle")
     await channel.send(embed=embed)
     await channel.send(f'{member.mention}, ohai! Mistäs tulet ja miten päädyit tänne? Bottina potkin sellaiset pois jotka ei vastaile. Aikaa 2 tuntia ^^')
+
+    user = await bot.user(member)
+    print(">>>>")
+    print(user)
+    print(">>>>")
 
     def check(m):
         return  bot.user.mention in m.content and m.channel == channel and member == m.author
@@ -43,12 +53,20 @@ async def on_member_join(member):
         await channel.send('👍')
 
 @bot.event
+async def on_message(message):
+    formats = ['jpg', 'png', 'gif', 'svg']
+    attachments = [f for f in message.attachments if f.filename.split('.')[-1] in formats]
+    #print(message.channel.id)
+    if message.channel.id == MEDIA_CHANNEL and not attachments:
+       await message.delete()
+
+@bot.event
 async def on_ready():
     print('Logged in as {0} / {1}'.format(bot.user.name, bot.user.id))
     print('-----')
     
-    print(TIMEOUT)
-    channel = bot.get_channel(CHANNEL)
+    #print(TIMEOUT)
+    #channel = bot.get_channel(GREETING_CHANNEL)
     #await channel.send("Elossa! ^_^")
 
 bot.run(TOKEN)
