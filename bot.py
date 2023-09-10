@@ -55,8 +55,6 @@ def reload_rules_if_changed(file):
         rules_stamp = current_stamp
         ALLOWED_URLS_RULES = '|'.join(rules['allowed_urls'])
         ALLOWED_MIMETYPES_RULES = '|'.join(rules['allowed_mimetypes'])
-        print(ALLOWED_URLS_RULES)
-        print(ALLOWED_MIMETYPES_RULES)
 
 def is_mimetype_allowed(url):
     u = urlparse(url)
