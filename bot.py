@@ -29,8 +29,8 @@ GREETING_TIMEOUT_HOURS = int(os.getenv('GREETING_TIMEOUT_HOURS') or 2)
 GREETING_TIMEOUT = GREETING_TIMEOUT_HOURS * 60 * 60
 RULES_FILE = 'rules.yaml'
 
-ALLOWED_URLS_RULES = ''
-ALLOWED_MIMETYPES_RULES = ''
+ALLOWED_URLS_RULES = '.*'
+ALLOWED_MIMETYPES_RULES = '.*'
 
 # Load messages from JSON file
 with open('messages.json') as f:
