@@ -64,7 +64,6 @@ def is_mimetype_allowed(url):
     allowed_url_regex = fr'({ALLOWED_URLS_RULES})'
     allowed_mimetype_regex = fr'({ALLOWED_MIMETYPES_RULES})'
     allowed_url = re.findall(allowed_url_regex, url)
-    # print(f"allowed_url: {allowed_url}, url: {url}, regex: {allowed_url_regex}")
     if allowed_url and allowed_url[0]:
         print(f"URL is allowed, for: {url}")
         return True
