@@ -1,0 +1,18 @@
+{
+    "fi": {
+        "GREETING_MESSAGE": "Paivoo! {member_mention} hyppasi servulle",
+        "GREETING_PROMPT": "{member_mention}, ohai! Mistas tulet ja miten paadyit tanne? Bottina potkin sellaiset pois jotka ei vastaile. Aikaa 2 tuntia ^^",
+        "KICK_MESSAGE": "{member_name} potkittiin, koska ei vastaillut botille.",
+        "KICK_REASON": "Ei vastausta botille.",
+        "TIMEOUT_MESSAGE": "Aikakatkaisu: Vastausta ei saatu.",
+        "SUCCESS_MESSAGE": "Onnistui: Vastaus vastaanotettu."
+    },
+    "en": {
+        "GREETING_MESSAGE": "Hello! {member_mention} has joined the server",
+        "GREETING_PROMPT": "{member_mention}, ohai! Where are you from and how did you find us? If you don't respond, the bot will kick you. You have 2 hours ^^",
+        "KICK_MESSAGE": "{member_name} was kicked for not responding to the bot.",
+        "KICK_REASON": "No response to the bot.",
+        "TIMEOUT_MESSAGE": "Timeout: No response received.",
+        "SUCCESS_MESSAGE": "Success: Response received."
+    }
+}
