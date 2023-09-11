@@ -10,3 +10,4 @@ allowed_mimetypes:
     - audio\/.*
     - image\/.*
     - video\/.*
+    - application/pdf

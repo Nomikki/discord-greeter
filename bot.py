@@ -11,7 +11,17 @@ import logging
 import yaml
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='output.log',
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.NOTSET)
+
+logging.info("Running greeter-bot")
+logger = logging.getLogger('greeter-bot')
+
+
 
 # Load environment variables
 load_dotenv()
