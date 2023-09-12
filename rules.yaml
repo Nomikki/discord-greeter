@@ -7,6 +7,8 @@ allowed_urls:
     - vimeo.com/[\S+]+
     - soundcloud.com/[\S+]+
     - instagram.com/(p|reel)/[\S]+
+    - giphy.com/(gifs|clips)/[\S]+
+    - tenor.com/view/[\S]+
 allowed_mimetypes:
     - audio/.*
     - image/.*
