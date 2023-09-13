@@ -1,13 +1,16 @@
 # You can easily test the rules in www.regex101.com
 allowed_urls:
-    - youtu.be\/[\S+]+
-    - youtube.com\/watch\?v=[\S+]+
-    - imgur.com\/gallery\/[\S+]+
-    - open.spotify.com\/(album|track)\/[\S+]+
-    - vimeo.com\/[\S+]+
-    - soundcloud.com\/[\S+]+
+    - youtu.be/[\S+]+
+    - youtube.com/watch\?v=[\S+]+
+    - imgur.com/gallery/[\S+]+
+    - open.spotify.com/(album|track)/[\S+]+
+    - vimeo.com/[\S+]+
+    - soundcloud.com/[\S+]+
+    - instagram.com/(p|reel)/[\S]+
+    - giphy.com/(gifs|clips)/[\S]+
+    - tenor.com/view/[\S]+
 allowed_mimetypes:
-    - audio\/.*
-    - image\/.*
-    - video\/.*
+    - audio/.*
+    - image/.*
+    - video/.*
     - application/pdf
