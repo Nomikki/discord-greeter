@@ -9,6 +9,7 @@ import re
 import json
 import logging
 import yaml
+import sys
 
 # Configure logging
 #logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -21,19 +22,29 @@ logging.basicConfig(filename='output.log',
 logging.info("Running greeter-bot")
 logger = logging.getLogger('greeter-bot')
 
+class bcolors:
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
 
+if len(sys.argv) > 1:
+    ENV_FILE = f'.env.{sys.argv[1]}'
+
+if 'ENV_FILE' in locals() and not os.path.exists(ENV_FILE):
+    print(f'{bcolors.FAIL}!!!{bcolors.ENDC} Envfile: {bcolors.WARNING}{ENV_FILE}{bcolors.ENDC} not found, fallback to {bcolors.OKGREEN}.env{bcolors.ENDC}')
+
+if not ('ENV_FILE' in locals() and os.path.exists(ENV_FILE)):
+    ENV_FILE = '.env'
+
+print(f'{bcolors.OKGREEN}==={bcolors.ENDC} Starting up with envfile: {bcolors.OKGREEN}{ENV_FILE}{bcolors.ENDC}')
 
 # Load environment variables
-load_dotenv()
+load_dotenv(ENV_FILE)
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-dev = False
-if dev:
-    GREETING_CHANNEL = int(os.getenv('GREETING_CHANNEL_DEV'))
-    MEDIA_CHANNEL = int(os.getenv('MEDIA_CHANNEL_DEV'))
-else:
-    GREETING_CHANNEL = int(os.getenv('GREETING_CHANNEL'))
-    MEDIA_CHANNEL = int(os.getenv('MEDIA_CHANNEL'))
+GREETING_CHANNEL = int(os.getenv('GREETING_CHANNEL'))
+MEDIA_CHANNEL = int(os.getenv('MEDIA_CHANNEL'))
 
 GREETING_TIMEOUT_HOURS = int(os.getenv('GREETING_TIMEOUT_HOURS') or 2)
 GREETING_TIMEOUT = GREETING_TIMEOUT_HOURS * 60 * 60
