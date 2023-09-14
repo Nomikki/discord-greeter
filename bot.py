@@ -39,8 +39,8 @@ GREETING_TIMEOUT_HOURS = int(os.getenv('GREETING_TIMEOUT_HOURS') or 2)
 GREETING_TIMEOUT = GREETING_TIMEOUT_HOURS * 60 * 60
 RULES_FILE = 'rules.yaml'
 
-ALLOWED_URLS_RULES = '.*'
-ALLOWED_MIMETYPES_RULES = '.*'
+ALLOWED_URLS_RULES = re.compile(r"(.*)")
+ALLOWED_MIMETYPES_RULES = re.compile(r"(.*)")
 
 # Load messages from JSON file
 with open('messages.json') as f:
@@ -70,31 +70,32 @@ def reload_rules_if_changed(file):
                 logging.exception(exc)
 
         rules_stamp = current_stamp
-        ALLOWED_URLS_RULES = '|'.join(rules['allowed_urls'])
-        ALLOWED_MIMETYPES_RULES = '|'.join(rules['allowed_mimetypes'])
+        ALLOWED_URLS_RULES = re.compile(fr"({'|'.join(rules['allowed_urls'])})")
+        ALLOWED_MIMETYPES_RULES = re.compile(fr"({'|'.join(rules['allowed_mimetypes'])})")
 
-def is_mimetype_allowed(url):
-    u = urlparse(url)
-    reload_rules_if_changed(RULES_FILE)
-    allowed_url_regex = fr'({ALLOWED_URLS_RULES})'
-    allowed_mimetype_regex = fr'({ALLOWED_MIMETYPES_RULES})'
-    allowed_url = re.findall(allowed_url_regex, url)
-    if allowed_url and allowed_url[0]:
+def is_url_allowed(url):
+    allowed_url, _ = ALLOWED_URLS_RULES.findall(url)
+    if allowed_url:
         logging.info(f"URL is allowed, for: {url}")
         return True
     else:
-        mimetype, _ = mimetypes.guess_type(u.path)
-        if mimetype:
-            allowed = re.match(allowed_mimetype_regex, mimetype)
-            if allowed:
-                logging.info(f"Mimetype is allowed ('{mimetype}'), for: {url}")
-                return True
-            else:
-                logging.warning(f"Mimetype is not allowed ('{mimetype}'), in: {url}")
-                return False
+        logging.warning(f"URL not allowed for: {url}")
+        return False
+
+def is_mimetype_allowed(url):
+    u = urlparse(url)
+    mimetype, _ = mimetypes.guess_type(u.path)
+    if mimetype:
+        allowed = ALLOWED_MIMETYPES_RULES.match(mimetype)
+        if allowed:
+            logging.info(f"Mimetype is allowed ('{mimetype}'), for: {url}")
+            return True
         else:
-            logging.warning(f"Mimetype not found for: {url}")
+            logging.warning(f"Mimetype is not allowed ('{mimetype}'), in: {url}")
             return False
+    else:
+        logging.warning(f"Mimetype not found for: {url}")
+        return False
 
 rules_stamp = ''
 rules = reload_rules_if_changed(RULES_FILE)
@@ -104,7 +105,7 @@ async def on_member_join(member):
     "This event is triggered when a new member joins the server."
     try:
         channel = await bot.fetch_channel(GREETING_CHANNEL)
-        embed = discord.Embed(title=messages[LANGUAGE]['GREETING_MESSAGE'].format(member_mention=member.mention), description=messages[LANGUAGE]["GREETING_MESSAGE"].format(member_mention=member.mention))
+        embed = discord.Embed(title=messages[LANGUAGE]['GREETING_TITLE'], description=messages[LANGUAGE]["GREETING_MESSAGE"].format(member_mention=member.mention))
         await channel.send(embed=embed)
         await channel.send(messages[LANGUAGE]['GREETING_PROMPT'].format(member_mention=member.mention, greeting_hours=GREETING_TIMEOUT_HOURS))
 
@@ -129,9 +130,10 @@ async def on_message(message):
     "This event is triggered when a message is sent in the server."
     try:
         if message.channel.id == MEDIA_CHANNEL:
+            reload_rules_if_changed(RULES_FILE)
             attachments = [f for f in message.attachments if is_mimetype_allowed(f.url)]
             url_pattern = r'https?://\S+'
-            urls = [url for url in re.findall(url_pattern, message.content) if is_mimetype_allowed(url)]
+            urls = [url for url in re.findall(url_pattern, message.content) if is_url_allowed(url) or is_mimetype_allowed(url)]
             if not (attachments or urls):
                 await message.delete()
     except Exception as e:
