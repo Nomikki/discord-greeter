@@ -39,27 +39,26 @@ GREETING_TIMEOUT_HOURS = int(os.getenv('GREETING_TIMEOUT_HOURS') or 2)
 GREETING_TIMEOUT = GREETING_TIMEOUT_HOURS * 60 * 60
 RULES_FILE = 'rules.yaml'
 
-ALLOWED_URLS_RULES = '.*'
-ALLOWED_MIMETYPES_RULES = '.*'
+FIND_URLS_FROM_MESSAGE = re.compile(r"https?://\S+")
+ALLOWED_URLS_RULES = re.compile(r"(.*)")
+ALLOWED_MIMETYPES_RULES = re.compile(r"(.*)")
 
 # Load messages from JSON file
 with open('messages.json') as f:
     messages = json.load(f)
-
-LANGUAGE = 'fi'  # Change this based on user preferences or server settings
 
 # Initialize the bot with a command prefix and description
 description = '''igorTheLoggerBot'''
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', case_insensitive=True, help_command=None, intents=intents)
 
-def reload_rules_if_changed(file):
+def reload_rules_if_changed():
     global rules_stamp
     global rules
     global ALLOWED_MIMETYPES_RULES
     global ALLOWED_URLS_RULES
 
-    current_stamp = os.stat(file).st_mtime
+    current_stamp = os.stat(RULES_FILE).st_mtime
     
     if rules_stamp != current_stamp:
         with open(RULES_FILE, "r") as f:
@@ -70,43 +69,44 @@ def reload_rules_if_changed(file):
                 logging.exception(exc)
 
         rules_stamp = current_stamp
-        ALLOWED_URLS_RULES = '|'.join(rules['allowed_urls'])
-        ALLOWED_MIMETYPES_RULES = '|'.join(rules['allowed_mimetypes'])
+        ALLOWED_URLS_RULES = re.compile(fr"({'|'.join(rules['allowed_urls'])})")
+        ALLOWED_MIMETYPES_RULES = re.compile(fr"({'|'.join(rules['allowed_mimetypes'])})")
 
-def is_mimetype_allowed(url):
-    u = urlparse(url)
-    reload_rules_if_changed(RULES_FILE)
-    allowed_url_regex = fr'({ALLOWED_URLS_RULES})'
-    allowed_mimetype_regex = fr'({ALLOWED_MIMETYPES_RULES})'
-    allowed_url = re.findall(allowed_url_regex, url)
-    if allowed_url and allowed_url[0]:
+def is_url_allowed(url):
+    allowed_url, _ = ALLOWED_URLS_RULES.findall(url)
+    if allowed_url:
         logging.info(f"URL is allowed, for: {url}")
         return True
     else:
-        mimetype, _ = mimetypes.guess_type(u.path)
-        if mimetype:
-            allowed = re.match(allowed_mimetype_regex, mimetype)
-            if allowed:
-                logging.info(f"Mimetype is allowed ('{mimetype}'), for: {url}")
-                return True
-            else:
-                logging.warning(f"Mimetype is not allowed ('{mimetype}'), in: {url}")
-                return False
+        logging.warning(f"URL not allowed for: {url}")
+        return False
+
+def is_mimetype_allowed(url):
+    u = urlparse(url)
+    mimetype, _ = mimetypes.guess_type(u.path)
+    if mimetype:
+        allowed = ALLOWED_MIMETYPES_RULES.match(mimetype)
+        if allowed:
+            logging.info(f"Mimetype is allowed ('{mimetype}'), for: {url}")
+            return True
         else:
-            logging.warning(f"Mimetype not found for: {url}")
+            logging.warning(f"Mimetype is not allowed ('{mimetype}'), in: {url}")
             return False
+    else:
+        logging.warning(f"Mimetype not found for: {url}")
+        return False
 
 rules_stamp = ''
-rules = reload_rules_if_changed(RULES_FILE)
+rules = reload_rules_if_changed()
     
 @bot.event
 async def on_member_join(member):
     "This event is triggered when a new member joins the server."
     try:
         channel = await bot.fetch_channel(GREETING_CHANNEL)
-        embed = discord.Embed(title=messages[LANGUAGE]['GREETING_MESSAGE'].format(member_mention=member.mention), description=messages[LANGUAGE]["GREETING_MESSAGE"].format(member_mention=member.mention))
+        embed = discord.Embed(title=messages['GREETING_TITLE'], description=messages["GREETING_MESSAGE"].format(member_mention=member.mention))
         await channel.send(embed=embed)
-        await channel.send(messages[LANGUAGE]['GREETING_PROMPT'].format(member_mention=member.mention, greeting_hours=GREETING_TIMEOUT_HOURS))
+        await channel.send(messages['GREETING_PROMPT'].format(member_mention=member.mention, greeting_hours=GREETING_TIMEOUT_HOURS))
 
         def check(m):
             return bot.user.mention in m.content and m.channel == channel and member == m.author
@@ -114,12 +114,12 @@ async def on_member_join(member):
         try:
             msg = await bot.wait_for('message', check=check, timeout=GREETING_TIMEOUT)
         except asyncio.TimeoutError:
-            await channel.send(messages[LANGUAGE]["TIMEOUT_MESSAGE"])
-            await member.kick(reason=messages[LANGUAGE]["KICK_REASON"])
-            await channel.send(messages[LANGUAGE]['KICK_MESSAGE'].format(member_name=member.name))
+            await channel.send(messages["TIMEOUT_MESSAGE"])
+            await member.kick(reason=messages["KICK_REASON"])
+            await channel.send(messages['KICK_MESSAGE'].format(member_name=member.name))
         else:
             logging.info(f"Message: {msg}")
-            await channel.send(messages[LANGUAGE]["SUCCESS_MESSAGE"])
+            await channel.send(messages["SUCCESS_MESSAGE"])
     except Exception as e:
         logging.exception(f"Error in on_member_join, {e}")
 
@@ -130,8 +130,9 @@ async def on_message(message):
     try:
         if message.channel.id == MEDIA_CHANNEL:
             attachments = [f for f in message.attachments if is_mimetype_allowed(f.url)]
-            url_pattern = r'https?://\S+'
-            urls = [url for url in re.findall(url_pattern, message.content) if is_mimetype_allowed(url)]
+            urls = [url for url in FIND_URLS_FROM_MESSAGE.findall(message.content) if is_url_allowed(url) or is_mimetype_allowed(url)]
+            if (attachments or urls):
+                reload_rules_if_changed()
             if not (attachments or urls):
                 await message.delete()
     except Exception as e:
